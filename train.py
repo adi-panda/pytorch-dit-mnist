@@ -84,7 +84,7 @@ def train():
     criterion = torch.nn.MSELoss()
 
     acc_steps = 1
-    for epoch in range(num_epochs):
+    for epoch in tqdm(range(num_epochs), desc="Training"):
         losses = []
         step_count = 0
         for imgs, labels in data_loader:
