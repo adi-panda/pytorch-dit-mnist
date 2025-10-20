@@ -22,7 +22,6 @@ training_labels_filepath = join(
 test_images_filepath = join(input_path, "t10k-images-idx3-ubyte/t10k-images-idx3-ubyte")
 test_labels_filepath = join(input_path, "t10k-labels-idx1-ubyte/t10k-labels-idx1-ubyte")
 
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
@@ -77,7 +76,7 @@ def train():
         num_layers=12,
         timestep_embed_dim=128,
         class_embed_dim=128,
-    )
+    ).to(device)
     model.train()
 
     num_epochs = 100
