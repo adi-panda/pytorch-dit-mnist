@@ -65,7 +65,7 @@ class LinearScheduler:
             )
             sigma = torch.sqrt(variance)
             z = torch.randn(xt.shape).to(xt.device)
-            return mean + sigma * z
+            return mean + sigma * z, x0
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ from dit import DiT
 from torch.utils.data import DataLoader
 from torch.optim import AdamW
 from torch.utils.data import TensorDataset
+from infer import infer
 
 input_path = "./mnist_data"
 training_images_filepath = join(
@@ -62,13 +63,13 @@ def train():
         pin_memory=torch.cuda.is_available(),
     )
 
-    im_size = X_train[0].shape
-    print(f"Image size: {im_size}")
+    img_size = X_train[0].shape
+    print(f"Image size: {img_size}")
 
     model = DiT(
-        img_height=im_size[1],
-        img_width=im_size[2],
-        img_channels=im_size[0],
+        img_height=img_size[1],
+        img_width=img_size[2],
+        img_channels=img_size[0],
         patch_height=7,
         patch_width=7,
         hidden_size=128,
@@ -79,7 +80,7 @@ def train():
     ).to(device)
     model.train()
 
-    num_epochs = 100
+    num_epochs = 300
     optimizer = AdamW(model.parameters(), lr=1e-5, weight_decay=0)
     criterion = torch.nn.MSELoss()
 
@@ -107,6 +108,9 @@ def train():
         optimizer.zero_grad()
         print("Finished epoch:{} | Loss : {:.4f}".format(epoch + 1, np.mean(losses)))
         torch.save(model.state_dict(), f"checkpoints/model_epoch_{epoch}.pth")
+
+        # Generate samples to show progress
+        infer(epoch)
 
     print("Training complete")
 

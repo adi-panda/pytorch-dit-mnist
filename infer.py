@@ -28,7 +28,9 @@ def sample(model, scheduler, class_label, img_size, output_dir, epoch):
     img = torch.clamp(img, -1.0, 1.0).detach().cpu()
     img = (img + 1.0) / 2.0
 
-    torchvision.utils.save_image(img, os.path.join(output_dir, f"sample_{epoch}.png"))
+    torchvision.utils.save_image(
+        img, os.path.join(output_dir, f"sample_{epoch}_{class_label}.png")
+    )
 
     print("Sampling complete")
 
@@ -38,11 +40,12 @@ def infer(epoch):
     scheduler = LinearScheduler(1000, 0.0001, 0.02)
 
     img_size = (1, 1, 28, 28)
+    _, C, H, W = img_size
 
     model = DiT(
-        img_height=im_size[1],
-        img_width=im_size[2],
-        img_channels=im_size[0],
+        img_height=H,
+        img_width=W,
+        img_channels=C,
         patch_height=7,
         patch_width=7,
         hidden_size=128,
@@ -63,4 +66,4 @@ def infer(epoch):
 
 
 if __name__ == "__main__":
-    sample()
+    infer(0)
