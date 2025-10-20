@@ -1,0 +1,3 @@
+mnist_data/
+*.pth
+__pycache__/
