@@ -56,7 +56,7 @@ def train():
 
     data_loader = DataLoader(
         train_dataset,
-        batch_size=64,
+        batch_size=2048,
         shuffle=True,
         num_workers=2,
         pin_memory=torch.cuda.is_available(),
@@ -106,7 +106,7 @@ def train():
         optimizer.step()
         optimizer.zero_grad()
         print("Finished epoch:{} | Loss : {:.4f}".format(epoch + 1, np.mean(losses)))
-        torch.save(model.state_dict(), f"model_epoch_{epoch}.pth")
+        torch.save(model.state_dict(), f"checkpoints/model_epoch_{epoch}.pth")
 
     print("Training complete")
 

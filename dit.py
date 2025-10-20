@@ -7,14 +7,16 @@ from einops import rearrange
 
 
 def get_time_embedding(timestep, timestep_embed_dim):
-
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     factor = 10_000 ** (
-        torch.arange(start=0, end=timestep_embed_dim // 2, dtype=torch.float32)
+        torch.arange(start=0, end=timestep_embed_dim // 2, dtype=torch.float32).to(
+            device
+        )
         / (timestep_embed_dim // 2)
     )
 
-    t_embed = timestep[:, None].repeat(1, timestep_embed_dim // 2) / factor
-    t_embed = torch.cat([t_embed.sin(), t_embed.cos()], dim=-1)
+    t_embed = timestep[:, None].repeat(1, timestep_embed_dim // 2).to(device) / factor
+    t_embed = torch.cat([t_embed.sin(), t_embed.cos()], dim=-1).to(device)
 
     return t_embed
 
@@ -34,6 +36,7 @@ class DiT(nn.Module):
         class_embed_dim,
     ):
         super().__init__()
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.img_height = img_height
         self.img_width = img_width
         self.img_channels = img_channels
@@ -53,32 +56,38 @@ class DiT(nn.Module):
         )
 
         # class embedding (10 classes for MNIST)
-        self.class_embed = nn.Embedding(10, class_embed_dim)
+        self.class_embed = nn.Embedding(10, class_embed_dim).to(self.device)
         self.c_proj = nn.Sequential(
-            nn.Linear(class_embed_dim, hidden_size),
+            nn.Linear(class_embed_dim, hidden_size).to(self.device),
             nn.SiLU(),
-            nn.Linear(hidden_size, hidden_size),
+            nn.Linear(hidden_size, hidden_size).to(self.device),
         )
 
         self.t_proj = nn.Sequential(
-            nn.Linear(timestep_embed_dim, hidden_size),
+            nn.Linear(timestep_embed_dim, hidden_size).to(self.device),
             nn.SiLU(),
-            nn.Linear(hidden_size, hidden_size),
+            nn.Linear(hidden_size, hidden_size).to(self.device),
         )
 
         self.layers = nn.ModuleList(
-            [Transformer(hidden_size, num_heads, num_layers) for _ in range(num_layers)]
+            [
+                Transformer(hidden_size, num_heads, num_layers).to(self.device)
+                for _ in range(num_layers)
+            ]
         )
 
-        self.norm = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
+        self.norm = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6).to(
+            self.device
+        )
 
         self.adaptive_norm_mlp = nn.Sequential(
-            nn.SiLU(), nn.Linear(hidden_size, 2 * hidden_size, bias=True)
+            nn.SiLU(),
+            nn.Linear(hidden_size, 2 * hidden_size, bias=True).to(self.device),
         )
 
         self.proj_out = nn.Linear(
             self.hidden_size, self.patch_height * self.patch_width * self.img_channels
-        )
+        ).to(self.device)
 
         ############################
         # DiT Layer Initialization #
