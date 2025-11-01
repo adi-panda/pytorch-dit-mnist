@@ -61,7 +61,7 @@ def infer(epoch):
     print(f"loaded dit checkpoint")
 
     with torch.no_grad():
-        for class_label in range(10):
+        for class_label in range(1):
             sample(model, scheduler, class_label, img_size, "samples", epoch)
 
 
