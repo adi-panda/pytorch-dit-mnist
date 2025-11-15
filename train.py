@@ -107,10 +107,12 @@ def train():
         optimizer.step()
         optimizer.zero_grad()
         print("Finished epoch:{} | Loss : {:.4f}".format(epoch + 1, np.mean(losses)))
-        torch.save(model.state_dict(), f"checkpoints/model_epoch_{epoch}.pth")
+        if (epoch + 1) % 30 == 0:
+            torch.save(model.state_dict(), f"checkpoints/model_epoch_{epoch}.pth")
 
         # Generate samples to show progress
-        infer(epoch)
+        if (epoch + 1) % 30 == 0:
+            infer(epoch)
 
     print("Training complete")
 

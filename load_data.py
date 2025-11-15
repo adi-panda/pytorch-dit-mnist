@@ -49,13 +49,18 @@ class MnistDataloader(object):
 
         return images, labels
 
-    def load_data(self):
+    def load_data(self, num_samples=None):
         x_train, y_train = self.read_images_labels(
             self.training_images_filepath, self.training_labels_filepath
         )
         x_test, y_test = self.read_images_labels(
             self.test_images_filepath, self.test_labels_filepath
         )
+        if num_samples is not None:
+            x_train = x_train[:num_samples]
+            y_train = y_train[:num_samples]
+            x_test = x_test[:num_samples]
+            y_test = y_test[:num_samples]
         return (x_train, y_train), (x_test, y_test)
 
 
