@@ -48,8 +48,9 @@ def train():
     )
     (x_train, y_train), (x_test, y_test) = mnist_dataloader.load_data()
 
-    X_train, Y_train = to_tensor(x_train, y_train, norm="0_1")
-    X_test, Y_test = to_tensor(x_test, y_test, norm="0_1")
+    # norma form -1 to 1
+    X_train, Y_train = to_tensor(x_train, y_train, norm="minus1_1")
+    X_test, Y_test = to_tensor(x_test, y_test, norm="minus1_1")
 
     train_dataset = TensorDataset(X_train, Y_train)
 
@@ -57,7 +58,7 @@ def train():
 
     data_loader = DataLoader(
         train_dataset,
-        batch_size=2048,
+        batch_size=256,
         shuffle=True,
         num_workers=2,
         pin_memory=torch.cuda.is_available(),
@@ -70,18 +71,18 @@ def train():
         img_height=img_size[1],
         img_width=img_size[2],
         img_channels=img_size[0],
-        patch_height=7,
-        patch_width=7,
-        hidden_size=128,
-        num_heads=8,
-        num_layers=12,
-        timestep_embed_dim=128,
-        class_embed_dim=128,
+        patch_height=2,
+        patch_width=2,
+        hidden_size=64,
+        num_heads=4,
+        num_layers=3,
+        timestep_embed_dim=64,
+        class_embed_dim=64,
     ).to(device)
     model.train()
 
-    num_epochs = 300
-    optimizer = AdamW(model.parameters(), lr=1e-5, weight_decay=0)
+    num_epochs = 1000
+    optimizer = AdamW(model.parameters(), lr=3e-4, weight_decay=0)
     criterion = torch.nn.MSELoss()
 
     acc_steps = 1
@@ -101,17 +102,20 @@ def train():
             pred = model(noisy, t, labels)
             loss = criterion(pred, noise)
             losses.append(loss.item())
+
+            loss.backward()
+
             if step_count % acc_steps == 0:
                 optimizer.step()
                 optimizer.zero_grad()
-        optimizer.step()
-        optimizer.zero_grad()
+        # optimizer.step()
+        # optimizer.zero_grad()
         print("Finished epoch:{} | Loss : {:.4f}".format(epoch + 1, np.mean(losses)))
-        if (epoch + 1) % 30 == 0:
+        if (epoch + 1) % 200 == 0:
             torch.save(model.state_dict(), f"checkpoints/model_epoch_{epoch}.pth")
 
         # Generate samples to show progress
-        if (epoch + 1) % 30 == 0:
+        if (epoch + 1) % 200 == 0:
             infer(epoch)
 
     print("Training complete")

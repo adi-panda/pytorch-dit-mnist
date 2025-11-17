@@ -49,19 +49,41 @@ class MnistDataloader(object):
 
         return images, labels
 
-    def load_data(self, num_samples=None):
+    def load_data(self, class_label=None, num_samples=None):
         x_train, y_train = self.read_images_labels(
             self.training_images_filepath, self.training_labels_filepath
         )
         x_test, y_test = self.read_images_labels(
             self.test_images_filepath, self.test_labels_filepath
         )
+
+        # Convert labels to numpy arrays for indexing
+        y_train_np = np.array(y_train)
+        y_test_np = np.array(y_test)
+        x_train_np = np.array(x_train)
+        x_test_np = np.array(x_test)
+
+        if class_label is not None:
+            idx_train = np.where(y_train_np == class_label)[0]
+            idx_test = np.where(y_test_np == class_label)[0]
+            x_train_np = x_train_np[idx_train]
+            y_train_np = y_train_np[idx_train]
+            x_test_np = x_test_np[idx_test]
+            y_test_np = y_test_np[idx_test]
+
         if num_samples is not None:
-            x_train = x_train[:num_samples]
-            y_train = y_train[:num_samples]
-            x_test = x_test[:num_samples]
-            y_test = y_test[:num_samples]
-        return (x_train, y_train), (x_test, y_test)
+            x_train_np = x_train_np[:num_samples]
+            y_train_np = y_train_np[:num_samples]
+            x_test_np = x_test_np[:num_samples]
+            y_test_np = y_test_np[:num_samples]
+
+        # Convert back to lists for compatibility with downstream code (if needed)
+        x_train_final = [img for img in x_train_np]
+        x_test_final = [img for img in x_test_np]
+        y_train_final = y_train_np.tolist()
+        y_test_final = y_test_np.tolist()
+
+        return (x_train_final, y_train_final), (x_test_final, y_test_final)
 
 
 #

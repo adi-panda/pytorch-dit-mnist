@@ -13,7 +13,7 @@ print(f"Using device: {device}")
 def sample(model, scheduler, class_label, img_size, output_dir, epoch):
     xt = torch.randn(img_size).to(device)
 
-    for t in tqdm(range(1000), desc="Sampling"):
+    for t in tqdm(reversed(range(1000)), desc="Sampling"):
 
         noise_prediction = model(
             xt,
@@ -46,13 +46,13 @@ def infer(epoch):
         img_height=H,
         img_width=W,
         img_channels=C,
-        patch_height=7,
-        patch_width=7,
-        hidden_size=128,
-        num_heads=8,
-        num_layers=12,
-        timestep_embed_dim=128,
-        class_embed_dim=128,
+        patch_height=2,
+        patch_width=2,
+        hidden_size=64,
+        num_heads=4,
+        num_layers=3,
+        timestep_embed_dim=64,
+        class_embed_dim=64,
     ).to(device)
     model.eval()
 
@@ -61,9 +61,9 @@ def infer(epoch):
     print(f"loaded dit checkpoint")
 
     with torch.no_grad():
-        for class_label in range(1):
+        for class_label in range(10):
             sample(model, scheduler, class_label, img_size, "samples", epoch)
 
 
 if __name__ == "__main__":
-    infer(0)
+    infer(59)

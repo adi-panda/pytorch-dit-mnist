@@ -19,31 +19,33 @@ class LinearScheduler:
         )
 
     def add_noise(self, original, t, noise):
+        original = original.to(self.device)
+        noise = noise.to(self.device)
+        
         original_shape = original.shape
         batch_size = original_shape[0]
 
         sqrt_alpha_cumprod = (
-            self.sqrt_alpha_cumprod[t].reshape(batch_size).to(self.device)
+            self.sqrt_alpha_cumprod[t].reshape(batch_size)
         )
         sqrt_one_minus_alpha_cumprod = (
-            self.sqrt_one_minus_alpha_cumprod[t].reshape(batch_size).to(self.device)
+            self.sqrt_one_minus_alpha_cumprod[t].reshape(batch_size)
         )
 
         for _ in range(len(original_shape) - 1):
-            sqrt_alpha_cumprod = sqrt_alpha_cumprod.unsqueeze(1).to(self.device)
-            sqrt_one_minus_alpha_cumprod = sqrt_one_minus_alpha_cumprod.unsqueeze(1).to(
-                self.device
-            )
+            sqrt_alpha_cumprod = sqrt_alpha_cumprod.unsqueeze(1)
+            sqrt_one_minus_alpha_cumprod = sqrt_one_minus_alpha_cumprod.unsqueeze(1)
 
-        noisy = sqrt_alpha_cumprod * original + sqrt_one_minus_alpha_cumprod * noise.to(
-            self.device
-        )
+        noisy = sqrt_alpha_cumprod * original + sqrt_one_minus_alpha_cumprod * noise
         return noisy
 
     def get_prev_timestep(self, xt, noise_prediction, timestep):
+        xt = xt.to(self.device)
+        noise_prediction = noise_prediction.to(self.device)
+        
         x0 = (
             xt - self.sqrt_one_minus_alpha_cumprod[timestep] * noise_prediction
-        ) / self.sqrt_alpha_cumprod[timestep].to(self.device)
+        ) / self.sqrt_alpha_cumprod[timestep]
         x0 = torch.clamp(x0, -1.0, 1.0)
 
         mean = (
@@ -51,9 +53,9 @@ class LinearScheduler:
             - self.betas[timestep]
             * noise_prediction
             / self.sqrt_one_minus_alpha_cumprod[timestep]
-        ).to(self.device)
+        )
 
-        mean = mean / torch.sqrt(1.0 - self.alphas[timestep])
+        mean = mean / torch.sqrt(self.alphas[timestep])
 
         if timestep == 0:
             return mean, x0
@@ -64,12 +66,12 @@ class LinearScheduler:
                 * self.betas[timestep]
             )
             sigma = torch.sqrt(variance)
-            z = torch.randn(xt.shape).to(xt.device)
+            z = torch.randn(xt.shape, device=self.device)
             return mean + sigma * z, x0
 
 
 if __name__ == "__main__":
-    x = torch.from_numpy(plt.imread("train_image_385.png"))
+    x = torch.from_numpy(plt.imread("train_image_0.png"))
     x = x[:, :, 0]
     x = x.reshape(1, 1, 28, 28)
 
@@ -79,4 +81,4 @@ if __name__ == "__main__":
     print(noisy.shape)
 
     # save the noisy image to disk for debugging
-    plt.imsave("noisy_image.png", noisy[0, 0, :, :], cmap=plt.cm.gray)
+    plt.imsave("noisy_image.png", noisy[0, 0, :, :].cpu().detach().numpy(), cmap=plt.cm.gray)
